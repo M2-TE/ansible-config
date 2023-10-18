@@ -1,3 +1,6 @@
+#  To run this, simply do: 
+#  ansible-playbook -v playbook.yml --ask-become-pass
+
 - name: Install Dev Tools
   hosts: 127.0.0.1
   connection: local
@@ -13,12 +16,33 @@
         name: cmake
         state: latest
     - name: Import VSCode keys
-      ansible.builtin.command: sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc && sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+      ansible.builtin.command: sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    - name: Check VSCode keys
+      ansible.builtin.command: sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
     - name: Install VSCode
       ansible.builtin.dnf:
         name: code
         state: latest
         update_cache: true
+
+- name: Install Nvidia drivers alongside CUDA Toolkit
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  become_user: root
+  tasks:
+    - name: Add CUDA repo to dnf
+      ansible.builtin.command: sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/fedora37/x86_64/cuda-fedora37.repo
+    - name: Install latest Nvidia driver
+      ansible.builtin.dnf:
+        name: nvidia-driver
+        state: latest
+        update_cache: true
+    - name: Install latest CUDA Toolkit
+      ansible.builtin.dnf:
+        name: cuda
+        state: latest
+
 
 - name: Install Brave browser
   hosts: 127.0.0.1
@@ -31,7 +55,9 @@
         name: dnf-plugins-core
         state: latest
     - name: Add brave repo to dnf
-      ansible.builtin.command: dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo && rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+      ansible.builtin.command: dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+    - name: Import brave keys
+      ansible.builtin.command: rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
     - name: Install brave
       ansible.builtin.dnf:
         name: brave-browser
