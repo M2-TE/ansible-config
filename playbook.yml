@@ -1,3 +1,25 @@
+- name: Install Dev Tools
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  become_user: root
+  tasks:
+    - name: Upgrade all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+    - name: Install CMake
+      ansible.builtin.dnf:
+        name: cmake
+        state: latest
+    - name: Import VSCode keys
+      ansible.builtin.command: sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc && sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+    - name: Install VSCode
+      ansible.builtin.dnf:
+        name: code
+        state: latest
+        update_cache: true
+
 - name: Install Brave browser
   hosts: 127.0.0.1
   connection: local
@@ -9,9 +31,7 @@
         name: dnf-plugins-core
         state: latest
     - name: Add brave repo to dnf
-      ansible.builtin.shell: dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
-    - name: Import brave core to rpm
-      ansible.builtin.shell: rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+      ansible.builtin.command: dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo && rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
     - name: Install brave
       ansible.builtin.dnf:
         name: brave-browser
